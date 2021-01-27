@@ -1,1 +1,1 @@
-# keptn-sdk-go
+# keptn-sdk-go (experimental)
