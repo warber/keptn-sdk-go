@@ -2,7 +2,6 @@ package main
 
 import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/warber/keptn-sdk/internal/example"
 	keptn "github.com/warber/keptn-sdk/pkg"
 	"log"
 )
@@ -18,8 +17,12 @@ func createClient() cloudevents.Client {
 
 func main() {
 
-	myHandler := &example.MyHandler{}
-	keptnService := keptn.NewKeptnService(createClient(), keptn.WithHandler(myHandler))
-	keptnService.Start()
+	myKeptn := keptn.NewKeptn(createClient(), keptn.OnTriggered(handleEvent))
+	myKeptn.Start()
 
+}
+
+func handleEvent(ce cloudevents.Event) error {
+	log.Println("Handling event")
+	return nil
 }
