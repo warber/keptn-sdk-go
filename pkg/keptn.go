@@ -9,17 +9,24 @@ import (
 	"strings"
 )
 
-type Handler interface {
+type TaskHandler interface {
+
+	// OnTriggered is called when a event was received that shall triggeres the TaskHandler
+	// Implement the business logic to process the task here
 	OnTriggered(ce cloudevents.Event) error
+
+	// OnFinished is called after the logic in OnTriggered was executed, i.e., after the task was processed.
+	// It shall return a keptnv2.EventData object that holds the data to be contained in the
+	// .finished event eventually sent by Keptn
 	OnFinished() keptnv2.EventData
+
+	// GetTask returns the task name for which the TaskHandler is responsible
 	GetTask() string
 }
 
-type OnTriggeredFunc func(ce cloudevents.Event) error
-
 type KeptnOption func(*Keptn)
 
-func WithHandler(handler Handler) KeptnOption {
+func WithHandler(handler TaskHandler) KeptnOption {
 	return func(k *Keptn) {
 
 		k.Handlers[keptnEventTypePrefix+handler.GetTask()+keptnTriggeredEventSuffix] = handler
@@ -42,7 +49,7 @@ func NewKeptn(ceClient cloudevents.Client, source string, opts ...KeptnOption) *
 	keptn := &Keptn{
 		CloudEventClient: ceClient,
 		Source:           source,
-		Handlers:         make(map[string]Handler),
+		Handlers:         make(map[string]TaskHandler),
 		SendStartEvent:   true,
 		SendFinishEvent:  true,
 	}
@@ -55,7 +62,7 @@ func NewKeptn(ceClient cloudevents.Client, source string, opts ...KeptnOption) *
 type Keptn struct {
 	CloudEventClient cloudevents.Client
 	Source           string
-	Handlers         map[string]Handler
+	Handlers         map[string]TaskHandler
 	SendStartEvent   bool
 	SendFinishEvent  bool
 }

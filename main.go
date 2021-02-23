@@ -5,6 +5,7 @@ import (
 	keptnv2 "github.com/keptn/go-utils/pkg/lib/v0_2_0"
 	keptn "github.com/warber/keptn-sdk/pkg"
 	"log"
+	"time"
 )
 
 func createClient() cloudevents.Client {
@@ -17,25 +18,32 @@ func createClient() cloudevents.Client {
 }
 
 func main() {
+	// 1. create http client
+	httpClient := keptn.GetHTTPClient(cloudevents.WithPath("/"), cloudevents.WithPort(8080))
 
-	myKeptn := keptn.NewKeptn(createClient(), "my-service", keptn.WithHandler(MyHandler{}))
+	// 2. create keptn
+	myKeptn := keptn.NewKeptn(httpClient, "my-service", keptn.WithHandler(DeploymentHandler{}))
+
+	// 3. start
 	myKeptn.Start()
 
 }
 
-type MyHandler struct {
+// DeploymentHandler handles "sh.keptn.event.deployment.triggered" tasks
+type DeploymentHandler struct {
 }
 
-func (m MyHandler) OnTriggered(ce cloudevents.Event) error {
+func (m DeploymentHandler) OnTriggered(ce cloudevents.Event) error {
 	log.Println("Executing Business Logic")
+	<-time.After(3 * time.Second)
 	return nil
 }
 
-func (m MyHandler) OnFinished() keptnv2.EventData {
+func (m DeploymentHandler) OnFinished() keptnv2.EventData {
 	log.Println("Executing OnFinish Logic")
 	return keptnv2.EventData{}
 }
 
-func (m MyHandler) GetTask() string {
+func (m DeploymentHandler) GetTask() string {
 	return "deployment"
 }
