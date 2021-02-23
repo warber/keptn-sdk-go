@@ -2,7 +2,7 @@ POST http://localhost:8080/
 Content-Type: application/cloudevents+json
 
 {
-  "type": "keptn.sh.event.task.triggered",
+  "type": "sh.keptn.event.deployment.triggered",
   "specversion": "1.0",
   "source": "test",
   "id": "f2b878d3-03c0-4e8f-bc3f-454bc1b3d79d",
