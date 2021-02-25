@@ -2,7 +2,7 @@ POST http://localhost:8080/
 Content-Type: application/cloudevents+json
 
 {
-  "type": "sh.keptn.event.deployment.triggered",
+  "type": "sh.keptn.event.greet.triggered",
   "specversion": "1.0",
   "source": "test",
   "id": "f2b878d3-03c0-4e8f-bc3f-454bc1b3d79d",
@@ -10,7 +10,6 @@ Content-Type: application/cloudevents+json
   "contenttype": "application/json",
   "shkeptncontext": "08735340-6f9e-4b32-97ff-3b6c292bc50f",
   "data": {
-    "project": "sockshop",
-    "service": "carts"
+    "message" : "Welcome!"
   }
 }

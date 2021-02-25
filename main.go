@@ -45,5 +45,5 @@ func (m DeploymentHandler) OnFinished() keptnv2.EventData {
 }
 
 func (m DeploymentHandler) GetTask() string {
-	return "deployment"
+	return "greet"
 }

@@ -75,13 +75,17 @@ func (k Keptn) Start() {
 
 func (k Keptn) gotEvent(event cloudevents.Event) {
 	if handler, ok := k.Handlers[event.Type()]; ok {
-		k.sendTaskStartedEvent(event)
+		if k.SendStartEvent {
+			k.sendTaskStartedEvent(event)
+		}
 		if err := handler.OnTriggered(event); err != nil {
 			k.handleErr(err)
 		}
 		eventFinishedData := handler.OnFinished()
 		finishedEvent := k.createFinishedEventForTriggeredEvent(event, eventFinishedData)
-		k.sendTaskFinishedEvent(finishedEvent)
+		if k.SendFinishEvent {
+			k.sendTaskFinishedEvent(finishedEvent)
+		}
 	}
 
 }
