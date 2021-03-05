@@ -56,3 +56,11 @@ func (httpSender HTTPEventSender) SendEvent(event cloudevents.Event) error {
 	}
 	return errors.New("Failed to send cloudevent: " + result.Error())
 }
+
+type Context struct {
+	FinishedData interface{}
+}
+
+func (c *Context) SetFinishedData(data interface{}) {
+	c.FinishedData = data
+}

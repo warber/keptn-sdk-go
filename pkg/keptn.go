@@ -17,17 +17,10 @@ type KeptnEventData struct {
 }
 
 type TaskHandler interface {
+	OnTriggered(ce interface{}, context Context) (error, Context)
 
-	// OnTriggered is called when a event was received that shall triggeres the TaskHandler
-	// Implement the business logic to process the task here
-	OnTriggered(ce interface{}) error
+	OnFinished(context Context) interface{}
 
-	// OnFinished is called after the logic in OnTriggered was executed, i.e., after the task was processed.
-	// It shall return a keptnv2.EventData object that holds the data to be contained in the
-	// .finished event eventually sent by Keptn
-	OnFinished() keptnv2.EventData
-
-	// GetTask returns the task name for which the TaskHandler is responsible
 	GetTask() string
 
 	GetData() interface{}
@@ -38,7 +31,7 @@ type KeptnOption func(*Keptn)
 func WithHandler(handler TaskHandler) KeptnOption {
 	return func(k *Keptn) {
 
-		k.Handlers[keptnEventTypePrefix+handler.GetTask()+keptnTriggeredEventSuffix] = handler
+		k.TaskRegistry.Add(keptnEventTypePrefix+handler.GetTask()+keptnTriggeredEventSuffix, TaskEntry{TaskHandler: handler})
 	}
 }
 
@@ -60,7 +53,7 @@ func NewKeptn(ceClient cloudevents.Client, source string, opts ...KeptnOption) *
 		EventSender:      NewHTTPEventSender(ceClient),
 		CloudEventClient: ceClient,
 		Source:           source,
-		Handlers:         make(map[string]TaskHandler),
+		TaskRegistry:     NewTasksMap(),
 		SendStartEvent:   true,
 		SendFinishEvent:  true,
 	}
@@ -74,7 +67,7 @@ type Keptn struct {
 	EventSender      EventSender
 	CloudEventClient cloudevents.Client
 	Source           string
-	Handlers         map[string]TaskHandler
+	TaskRegistry     TaskRegistry
 	SendStartEvent   bool
 	SendFinishEvent  bool
 }
@@ -87,30 +80,27 @@ func (k Keptn) Start() {
 }
 
 func (k Keptn) gotEvent(event cloudevents.Event) {
-
-	if handler, ok := k.Handlers[event.Type()]; ok {
-
-		data := handler.GetData()
+	if handler, ok := k.TaskRegistry.Contains(event.Type()); ok {
+		data := handler.TaskHandler.GetData()
 		if err := event.DataAs(&data); err != nil {
 			k.handleErr(err)
 		}
 		if k.SendStartEvent {
 			k.send(k.createStartedEventForTriggeredEvent(event))
 		}
-		if err := handler.OnTriggered(data); err != nil {
+		err, newContext := handler.TaskHandler.OnTriggered(data, handler.Context)
+		if err != nil {
 			k.handleErr(err)
 		}
-		eventFinishedData := handler.OnFinished()
+		eventFinishedData := handler.TaskHandler.OnFinished(newContext)
 
 		if k.SendFinishEvent {
 			k.send(k.createFinishedEventForTriggeredEvent(event, eventFinishedData))
 		}
 	}
-
 }
 
 func (k Keptn) send(event cloudevents.Event) error {
-	log.Println("Sending Task Started Event")
 	if err := k.EventSender.SendEvent(event); err != nil {
 		log.Println("Error sending .started event")
 	}
@@ -138,7 +128,7 @@ func (k Keptn) createStartedEventForTriggeredEvent(triggeredEvent cloudevents.Ev
 	return c
 }
 
-func (k Keptn) createFinishedEventForTriggeredEvent(triggeredEvent cloudevents.Event, eventData keptnv2.EventData) cloudevents.Event {
+func (k Keptn) createFinishedEventForTriggeredEvent(triggeredEvent cloudevents.Event, eventData interface{}) cloudevents.Event {
 	finishedEventType := strings.Trim(triggeredEvent.Type(), ".triggered") + ".finished"
 	keptnContext, _ := triggeredEvent.Context.GetExtension(keptnContextCEExtension)
 	c := cloudevents.NewEvent()

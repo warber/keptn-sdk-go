@@ -34,16 +34,18 @@ func main() {
 type DeploymentHandler struct {
 }
 
-func (m DeploymentHandler) OnTriggered(ce interface{}) error {
+func (m DeploymentHandler) OnTriggered(ce interface{}, context keptn.Context) (error, keptn.Context) {
 	greetTriggeredData := ce.(*GreetTriggeredData)
 	log.Println("Got GreetTriggered Event: " + greetTriggeredData.GreetMessage)
 	<-time.After(5 * time.Second)
-	return nil
+	context.SetFinishedData(GreetFinishedData{GreetMessage: greetTriggeredData.GreetMessage})
+	return nil, context
 }
 
-func (m DeploymentHandler) OnFinished() keptnv2.EventData {
+func (m DeploymentHandler) OnFinished(context keptn.Context) interface{} {
 	log.Println("Executing OnFinish Logic")
-	return keptnv2.EventData{}
+	log.Println(context.FinishedData)
+	return context.FinishedData
 }
 
 func (m DeploymentHandler) GetTask() string {
@@ -55,6 +57,11 @@ func (m DeploymentHandler) GetData() interface{} {
 }
 
 type GreetTriggeredData struct {
+	keptnv2.EventData
+	GreetMessage string `json:"greetMessage"`
+}
+
+type GreetFinishedData struct {
 	keptnv2.EventData
 	GreetMessage string `json:"greetMessage"`
 }
