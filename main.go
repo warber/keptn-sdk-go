@@ -18,6 +18,7 @@ func createClient() cloudevents.Client {
 }
 
 func main() {
+
 	// 1. create http client
 	httpClient := keptn.GetHTTPClient(cloudevents.WithPath("/"), cloudevents.WithPort(8080))
 
@@ -33,9 +34,10 @@ func main() {
 type DeploymentHandler struct {
 }
 
-func (m DeploymentHandler) OnTriggered(ce cloudevents.Event) error {
-	log.Println("Executing Business Logic")
-	<-time.After(3 * time.Second)
+func (m DeploymentHandler) OnTriggered(ce interface{}) error {
+	greetTriggeredData := ce.(*GreetTriggeredData)
+	log.Println("Got GreetTriggered Event: " + greetTriggeredData.GreetMessage)
+	<-time.After(5 * time.Second)
 	return nil
 }
 
@@ -46,4 +48,13 @@ func (m DeploymentHandler) OnFinished() keptnv2.EventData {
 
 func (m DeploymentHandler) GetTask() string {
 	return "greet"
+}
+
+func (m DeploymentHandler) GetData() interface{} {
+	return &GreetTriggeredData{}
+}
+
+type GreetTriggeredData struct {
+	keptnv2.EventData
+	GreetMessage string `json:"greetMessage"`
 }
