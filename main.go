@@ -42,12 +42,6 @@ func (m DeploymentHandler) OnTriggered(ce interface{}, context keptn.Context) (e
 	return nil, context
 }
 
-func (m DeploymentHandler) OnFinished(context keptn.Context) interface{} {
-	log.Println("Executing OnFinish Logic")
-	log.Println(context.FinishedData)
-	return context.FinishedData
-}
-
 func (m DeploymentHandler) GetTask() string {
 	return "greet"
 }

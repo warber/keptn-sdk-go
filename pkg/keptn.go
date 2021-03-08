@@ -19,8 +19,6 @@ type KeptnEventData struct {
 type TaskHandler interface {
 	OnTriggered(ce interface{}, context Context) (error, Context)
 
-	OnFinished(context Context) interface{}
-
 	GetTask() string
 
 	GetData() interface{}
@@ -92,10 +90,9 @@ func (k Keptn) gotEvent(event cloudevents.Event) {
 		if err != nil {
 			k.handleErr(err)
 		}
-		eventFinishedData := handler.TaskHandler.OnFinished(newContext)
 
 		if k.SendFinishEvent {
-			k.send(k.createFinishedEventForTriggeredEvent(event, eventFinishedData))
+			k.send(k.createFinishedEventForTriggeredEvent(event, newContext.FinishedData))
 		}
 	}
 }
