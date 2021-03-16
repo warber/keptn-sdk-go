@@ -1,4 +1,4 @@
-package keptn
+package sdk
 
 import (
 	"context"

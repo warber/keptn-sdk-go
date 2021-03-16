@@ -1,4 +1,4 @@
-package keptn
+package sdk
 
 const keptnEventTypePrefix = "sh.keptn.event."
 const keptnTriggeredEventSuffix = ".triggered"

@@ -1,4 +1,4 @@
-package keptn
+package sdk
 
 type TaskRegistry struct {
 	Entries map[string]TaskEntry
