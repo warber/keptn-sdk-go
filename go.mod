@@ -1,4 +1,4 @@
-module github.com/warber/keptn-sdk
+module github.com/warber/keptn-sdk-go
 
 go 1.15
 

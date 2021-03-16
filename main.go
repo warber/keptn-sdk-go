@@ -3,7 +3,7 @@ package main
 import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	keptnv2 "github.com/keptn/go-utils/pkg/lib/v0_2_0"
-	keptn "github.com/warber/keptn-sdk/pkg"
+	keptn "github.com/warber/keptn-sdk-go/pkg"
 	"log"
 	"time"
 )
