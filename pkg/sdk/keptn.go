@@ -17,19 +17,16 @@ type KeptnEventData struct {
 }
 
 type TaskHandler interface {
-	OnTriggered(ce interface{}, context Context) (error, Context)
-
-	GetTask() string
+	Execute(ce interface{}, context Context) (error, Context)
 
 	GetData() interface{}
 }
 
 type KeptnOption func(*Keptn)
 
-func WithHandler(handler TaskHandler) KeptnOption {
+func WithHandler(handler TaskHandler, eventType string) KeptnOption {
 	return func(k *Keptn) {
-
-		k.TaskRegistry.Add(keptnEventTypePrefix+handler.GetTask()+keptnTriggeredEventSuffix, TaskEntry{TaskHandler: handler})
+		k.TaskRegistry.Add(eventType, TaskEntry{TaskHandler: handler})
 	}
 }
 
@@ -86,7 +83,7 @@ func (k Keptn) gotEvent(event cloudevents.Event) {
 		if k.SendStartEvent {
 			k.send(k.createStartedEventForTriggeredEvent(event))
 		}
-		err, newContext := handler.TaskHandler.OnTriggered(data, handler.Context)
+		err, newContext := handler.TaskHandler.Execute(data, handler.Context)
 		if err != nil {
 			k.handleErr(err)
 		}
