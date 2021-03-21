@@ -45,12 +45,12 @@ func SendFinishEvent(sendFinishEvent bool) KeptnOption {
 func NewKeptn(ceClient cloudevents.Client, source string, opts ...KeptnOption) *Keptn {
 
 	keptn := &Keptn{
-		EventSender:      NewHTTPEventSender(ceClient),
-		CloudEventClient: ceClient,
-		Source:           source,
-		TaskRegistry:     NewTasksMap(),
-		SendStartEvent:   true,
-		SendFinishEvent:  true,
+		EventSender:     NewHTTPEventSender(ceClient),
+		EventReceiver:   ceClient,
+		Source:          source,
+		TaskRegistry:    NewTasksMap(),
+		SendStartEvent:  true,
+		SendFinishEvent: true,
 	}
 	for _, opt := range opts {
 		opt(keptn)
@@ -59,18 +59,18 @@ func NewKeptn(ceClient cloudevents.Client, source string, opts ...KeptnOption) *
 }
 
 type Keptn struct {
-	EventSender      EventSender
-	CloudEventClient cloudevents.Client
-	Source           string
-	TaskRegistry     TaskRegistry
-	SendStartEvent   bool
-	SendFinishEvent  bool
+	EventSender     EventSender
+	EventReceiver   EventReceiver
+	Source          string
+	TaskRegistry    TaskRegistry
+	SendStartEvent  bool
+	SendFinishEvent bool
 }
 
 func (k Keptn) Start() {
 	ctx := context.Background()
 	ctx = cloudevents.WithEncodingStructured(ctx)
-	err := k.CloudEventClient.StartReceiver(ctx, k.gotEvent)
+	err := k.EventReceiver.StartReceiver(ctx, k.gotEvent)
 	_ = err
 }
 
@@ -110,13 +110,13 @@ func (k Keptn) createStartedEventForTriggeredEvent(triggeredEvent cloudevents.Ev
 	fmt.Println(triggeredEvent.Type())
 
 	startedEventType := strings.TrimSuffix(triggeredEvent.Type(), ".triggered") + ".started"
-	keptnContext, _ := triggeredEvent.Context.GetExtension(keptnContextCEExtension)
+	keptnContext, _ := triggeredEvent.Context.GetExtension(KeptnContextCEExtension)
 	c := cloudevents.NewEvent()
 	c.SetID(uuid.New().String())
 	c.SetType(startedEventType)
 	c.SetDataContentType(cloudevents.ApplicationJSON)
-	c.SetExtension(keptnContextCEExtension, keptnContext)
-	c.SetExtension(triggeredIDCEExtension, triggeredEvent.ID())
+	c.SetExtension(KeptnContextCEExtension, keptnContext)
+	c.SetExtension(TriggeredIDCEExtension, triggeredEvent.ID())
 	c.SetSource(k.Source)
 	c.SetData(cloudevents.ApplicationJSON, keptnv2.EventData{})
 	return c
@@ -124,13 +124,13 @@ func (k Keptn) createStartedEventForTriggeredEvent(triggeredEvent cloudevents.Ev
 
 func (k Keptn) createFinishedEventForTriggeredEvent(triggeredEvent cloudevents.Event, eventData interface{}) cloudevents.Event {
 	finishedEventType := strings.Trim(triggeredEvent.Type(), ".triggered") + ".finished"
-	keptnContext, _ := triggeredEvent.Context.GetExtension(keptnContextCEExtension)
+	keptnContext, _ := triggeredEvent.Context.GetExtension(KeptnContextCEExtension)
 	c := cloudevents.NewEvent()
 	c.SetID(uuid.New().String())
 	c.SetType(finishedEventType)
 	c.SetDataContentType(cloudevents.ApplicationJSON)
-	c.SetExtension(keptnContextCEExtension, keptnContext)
-	c.SetExtension(triggeredIDCEExtension, triggeredEvent.ID())
+	c.SetExtension(KeptnContextCEExtension, keptnContext)
+	c.SetExtension(TriggeredIDCEExtension, triggeredEvent.ID())
 	c.SetSource(k.Source)
 	c.SetData(cloudevents.ApplicationJSON, eventData)
 	return c

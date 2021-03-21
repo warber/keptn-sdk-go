@@ -13,12 +13,15 @@ import (
 const DefaultHTTPEventEndpoint = "http://localhost:8081/event"
 const MAX_SEND_RETRIES = 3
 
-// EventSender describes the interface for sending a CloudEvent
+//go:generate moq  -pkg fake -out ./fake/event_sender_mock.go . EventSender
 type EventSender interface {
 	SendEvent(event cloudevents.Event) error
 }
 
-// HTTPEventSender sends CloudEvents via HTTP
+type EventReceiver interface {
+	StartReceiver(ctx context.Context, fn interface{}) error
+}
+
 type HTTPEventSender struct {
 	// EventsEndpoint is the http endpoint the events are sent to
 	EventsEndpoint string
