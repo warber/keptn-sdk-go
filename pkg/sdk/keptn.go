@@ -16,6 +16,7 @@ type KeptnEventData struct {
 	Service string
 }
 
+//go:generate moq  -pkg fake -out ./fake/task_handler_mock.go . TaskHandler
 type TaskHandler interface {
 	Execute(ce interface{}, context Context) (error, Context)
 
@@ -32,25 +33,25 @@ func WithHandler(handler TaskHandler, eventType string) KeptnOption {
 
 func SendStartEvent(sendStartEvent bool) KeptnOption {
 	return func(k *Keptn) {
-		k.SendStartEvent = sendStartEvent
+		k.AutoSendStartedEventDisabled = sendStartEvent
 	}
 }
 
 func SendFinishEvent(sendFinishEvent bool) KeptnOption {
 	return func(k *Keptn) {
-		k.SendFinishEvent = sendFinishEvent
+		k.AutoSendFinishedEventDisabled = sendFinishEvent
 	}
 }
 
 func NewKeptn(ceClient cloudevents.Client, source string, opts ...KeptnOption) *Keptn {
 
 	keptn := &Keptn{
-		EventSender:     NewHTTPEventSender(ceClient),
-		EventReceiver:   ceClient,
-		Source:          source,
-		TaskRegistry:    NewTasksMap(),
-		SendStartEvent:  true,
-		SendFinishEvent: true,
+		EventSender:                   NewHTTPEventSender(ceClient),
+		EventReceiver:                 ceClient,
+		Source:                        source,
+		TaskRegistry:                  NewTasksMap(),
+		AutoSendStartedEventDisabled:  false,
+		AutoSendFinishedEventDisabled: false,
 	}
 	for _, opt := range opts {
 		opt(keptn)
@@ -59,12 +60,12 @@ func NewKeptn(ceClient cloudevents.Client, source string, opts ...KeptnOption) *
 }
 
 type Keptn struct {
-	EventSender     EventSender
-	EventReceiver   EventReceiver
-	Source          string
-	TaskRegistry    TaskRegistry
-	SendStartEvent  bool
-	SendFinishEvent bool
+	EventSender                   EventSender
+	EventReceiver                 EventReceiver
+	Source                        string
+	TaskRegistry                  TaskRegistry
+	AutoSendStartedEventDisabled  bool
+	AutoSendFinishedEventDisabled bool
 }
 
 func (k Keptn) Start() {
@@ -80,7 +81,7 @@ func (k Keptn) gotEvent(event cloudevents.Event) {
 		if err := event.DataAs(&data); err != nil {
 			k.handleErr(err)
 		}
-		if k.SendStartEvent {
+		if !k.AutoSendStartedEventDisabled {
 			k.send(k.createStartedEventForTriggeredEvent(event))
 		}
 		err, newContext := handler.TaskHandler.Execute(data, handler.Context)
@@ -88,7 +89,7 @@ func (k Keptn) gotEvent(event cloudevents.Event) {
 			k.handleErr(err)
 		}
 
-		if k.SendFinishEvent {
+		if !k.AutoSendFinishedEventDisabled {
 			k.send(k.createFinishedEventForTriggeredEvent(event, newContext.FinishedData))
 		}
 	}
