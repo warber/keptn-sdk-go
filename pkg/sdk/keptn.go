@@ -124,7 +124,7 @@ func (k Keptn) createStartedEventForTriggeredEvent(triggeredEvent cloudevents.Ev
 }
 
 func (k Keptn) createFinishedEventForTriggeredEvent(triggeredEvent cloudevents.Event, eventData interface{}) cloudevents.Event {
-	finishedEventType := strings.Trim(triggeredEvent.Type(), ".triggered") + ".finished"
+	finishedEventType := strings.TrimSuffix(triggeredEvent.Type(), ".triggered") + ".finished"
 	keptnContext, _ := triggeredEvent.Context.GetExtension(KeptnContextCEExtension)
 	c := cloudevents.NewEvent()
 	c.SetID(uuid.New().String())
