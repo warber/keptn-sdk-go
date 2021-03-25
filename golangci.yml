@@ -1,0 +1,10 @@
+linters:
+  enable:
+    - megacheck
+    - govet
+    - misspell
+  disable-all: false
+  presets:
+    - bugs
+    - unused
+  fast: false
