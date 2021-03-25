@@ -3,7 +3,7 @@ linters:
     - megacheck
     - govet
     - misspell
-  disable-all: false
+  disable-all: true
   presets:
     - bugs
     - unused
