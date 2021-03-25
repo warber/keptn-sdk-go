@@ -97,7 +97,7 @@ func (k Keptn) gotEvent(event cloudevents.Event) {
 
 func (k Keptn) send(event cloudevents.Event) error {
 	if err := k.EventSender.SendEvent(event); err != nil {
-		log.Println("Error seednding .started event")
+		log.Println("Error sending .started event")
 	}
 	return nil
 }
